@@ -1,0 +1,48 @@
+{
+  "name": "@vanit-co/sql-ts",
+  "version": "0.0.1",
+  "description": "A TypeScript SQL query builder using tagged template literals. Write plain SQL with safe, automatic parameter binding and properly quoted identifiers. No DSL to learn, no magic, no ORM.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "./dist/index.js",
+    "./dist/index.d.ts",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "test": "vitest run",
+    "build": "npx rollup --config --bundleConfigAsCjs"
+  },
+  "devDependencies": {
+    "@rollup/plugin-typescript": "^12.3.0",
+    "@types/ramda": "^0.31.1",
+    "rollup": "^4.60.0",
+    "rollup-plugin-dts": "^6.4.1",
+    "tslib": "^2.8.1",
+    "typescript": "^5.9.0",
+    "vitest": "^4.1.0"
+  },
+  "dependencies": {
+    "ramda": "^0.32.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vanit-co/sql-ts.git"
+  },
+  "keywords": [
+    "sql",
+    "query",
+    "postgres",
+    "pg",
+    "mysql",
+    "mysql2"
+  ],
+  "author": "Geovanny Silva",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/vanit-co/sql-ts/issues"
+  },
+  "homepage": "https://github.com/vanit-co/sql-ts#readme"
+}

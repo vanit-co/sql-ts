@@ -407,7 +407,7 @@ Attach a name to a `Result` for use with named prepared statements (e.g., `pg`'s
 ```ts
 import { sql, preparedStatementName } from '@vanit-co/sql-ts'
 
-const q = sql`SELECT * FROM users WHERE id = ${1}`
+const q = sql`SELECT * FROM ${users} WHERE id = ${1}`
 const named = preparedStatementName(q, 'get-user-by-id')
 
 named.name   // 'get-user-by-id'
@@ -415,7 +415,7 @@ named.text   // SELECT * FROM users WHERE id = $1
 named.values // [1]
 
 // Pass to pg:
-await client.query({ name: named.name, text: named.text, values: named.values })
+await client.query(named)
 ```
 
 `preparedStatementName` does not mutate the original result — it returns a new object.

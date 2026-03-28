@@ -335,7 +335,7 @@ An empty fragment. Acts as the identity element for `concat` — useful as the s
 
 ```ts
 import { pipe, reduce } from 'ramda'
-import { schema, select, join, where, concat, empty, all, Fragment } from '@vanit-co/sql-ts'
+import { schema, select, join, where, concat, empty, all } from '@vanit-co/sql-ts'
 
 const users = schema({ table: 'users', columns: ['id', 'email'], alias: 'u' })
 const posts = schema({ table: 'posts', columns: ['id', 'user_id', 'title'], alias: 'p' })
@@ -343,7 +343,7 @@ const posts = schema({ table: 'posts', columns: ['id', 'user_id', 'title'], alia
 type Filters = { userId?: number; titleLike?: string }
 
 const buildPostsQuery = ({ userId, titleLike }: Filters) => {
-  const clauses: Fragment[] = [
+  const clauses = [
     select`SELECT ${all(users, posts)} FROM ${posts}`,
     join`  JOIN ${users} ON ${posts.user_id} = ${users.id}`,
     userId    ? where` WHERE ${users.id} = ${userId}`          : empty,
@@ -351,7 +351,7 @@ const buildPostsQuery = ({ userId, titleLike }: Filters) => {
   ]
 
   return reduce(
-    (acc: Fragment, clause: Fragment) => concat(clause)(acc),
+    (acc, clause) => concat(clause)(acc),
     empty,
     clauses
   )

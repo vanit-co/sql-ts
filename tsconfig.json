@@ -6,10 +6,13 @@
     ,"esModuleInterop": true
     ,"moduleResolution": "bundler"
     ,"declaration": true
-    ,"declarationDir": "./dist"
+    ,"noEmit": false
+    ,"emitDeclarationOnly": false
+    ,"outDir": "./dist"
   }
   ,"include": ["./src"]
   ,"exclude": [
     "node_modules"
+    ,"dist"
   ]
 }

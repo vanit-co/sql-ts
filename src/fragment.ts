@@ -7,15 +7,6 @@ type Fragment = {
   readonly binds: ReadonlyArray<unknown>
 }
 
-const concat = (right: Fragment) => (left: Fragment): Result => {
-  const lastLeft = left.strings[left.strings.length - 1] ?? ''
-  const firstRight = right.strings[0] ?? ''
-  return result(fragment(
-    [...left.strings.slice(0, -1), lastLeft + firstRight, ...right.strings.slice(1)]
-    ,[...left.binds, ...right.binds]
-  ))
-}
-
 const fragment = (strings: ReadonlyArray<string> ,binds: ReadonlyArray<unknown> = []): Fragment => {
 
   if(strings.length !== binds.length + 1) 
@@ -51,7 +42,6 @@ const stringfyIdentifierAndRaw = (quote: string = '') => (s: Fragment): Fragment
 
 export type { Fragment }
 export {
-  concat
-  ,fragment
+  fragment
   ,stringfyIdentifierAndRaw
 }

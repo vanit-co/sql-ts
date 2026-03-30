@@ -1,9 +1,9 @@
 import { toMysql, toPostgres } from './dialect'
-import { Fragment, concat } from './fragment'
+import { Fragment, fragment } from './fragment'
 import { SYM_IDENTIFIER, SYM_RAW } from './symbol'
 
 type Result = {
-  append: (s: Fragment) => Fragment
+  append: (s: Fragment) => Result
   name?: string
   sql: string
   text: string
@@ -11,6 +11,15 @@ type Result = {
 } & Fragment
 
 const preparedStatementName = (r: Result ,n: string): Result => ({ ...r ,name: n })
+
+const concat = (right: Fragment) => (left: Fragment): Result => {
+  const lastLeft = left.strings[left.strings.length - 1] ?? ''
+  const firstRight = right.strings[0] ?? ''
+  return result(fragment(
+    [...left.strings.slice(0, -1), lastLeft + firstRight, ...right.strings.slice(1)]
+    ,[...left.binds, ...right.binds]
+  ))
+}
 
 const result = (s: Fragment): Result => ({
   ...s,
@@ -28,6 +37,7 @@ const result = (s: Fragment): Result => ({
 
 export type { Result }
 export {
-  preparedStatementName
+  concat
+  ,preparedStatementName
   ,result
 }

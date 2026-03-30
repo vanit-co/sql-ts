@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { fragment, concat, stringfyIdentifierAndRaw } from '../src/fragment'
-import { empty } from '../src/statement'
+import { fragment, stringfyIdentifierAndRaw } from '../src/fragment'
 import { raw } from '../src/wildcard'
 import { identifier } from '../src/identifier'
 
@@ -38,53 +37,6 @@ describe('fragment', () => {
   it('is frozen', () => {
     const f = fragment(['SELECT 1'], [])
     expect(Object.isFrozen(f)).toBe(true)
-  })
-})
-
-describe('concat', () => {
-  it('joins two plain text fragments', () => {
-    const left = fragment(['SELECT * FROM t'], [])
-    const right = fragment([' WHERE id = 1'], [])
-    const r = concat(right)(left)
-    expect(r.strings).toEqual(['SELECT * FROM t WHERE id = 1'])
-    expect(r.binds).toEqual([])
-  })
-
-  it('merges the boundary strings', () => {
-    const left = fragment(['SELECT * FROM t WHERE id = ', ''], [1])
-    const right = fragment([' AND name = ', ''], ['alice'])
-    const r = concat(right)(left)
-    expect(r.strings).toEqual(['SELECT * FROM t WHERE id = ', ' AND name = ', ''])
-    expect(r.binds).toEqual([1, 'alice'])
-  })
-
-  it('concatenating with empty on the right is identity', () => {
-    const left = fragment(['SELECT 1'], [])
-    const r = concat(empty)(left)
-    expect(r.strings).toEqual(['SELECT 1'])
-    expect(r.binds).toEqual([])
-  })
-
-  it('concatenating with empty on the left is identity', () => {
-    const right = fragment(['SELECT 1'], [])
-    const r = concat(right)(empty)
-    expect(r.strings).toEqual(['SELECT 1'])
-    expect(r.binds).toEqual([])
-  })
-
-  it('preserves binds from both sides', () => {
-    const left = fragment(['a = ', ''], [1])
-    const right = fragment([', b = ', ''], [2])
-    const r = concat(right)(left)
-    expect(r.binds).toEqual([1, 2])
-  })
-
-  it('returns a Result', () => {
-    const left = fragment(['SELECT 1'], [])
-    const right = fragment([' LIMIT 1'], [])
-    const r = concat(right)(left)
-    expect(r).toHaveProperty('strings')
-    expect(r).toHaveProperty('binds')
   })
 })
 

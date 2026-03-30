@@ -4,6 +4,20 @@ A TypeScript SQL query builder using tagged template literals. Write plain SQL w
 
 Supports **MySQL** (`?` placeholders, `` ` `` backtick identifiers) and **PostgreSQL** (`$n` placeholders, `"` double-quote identifiers) out of the box.
 
+## Why this library?
+
+Writing raw SQL in TypeScript runs into a set of recurring friction points that this library addresses directly:
+
+- **Automatic identifier quoting** — table and column names are interpolated as properly quoted identifiers (`` `name` `` for MySQL, `"name"` for PostgreSQL), never as bind parameters. No manual quoting, no dialect-specific escaping scattered across your codebase.
+
+- **Table alias and qualified column references** — the `select` tag (and its aliases `join`, `where`) automatically expands schema tables as `"table" "alias"` and columns as `"alias"."column"`, so JOIN-heavy queries stay unambiguous without hand-writing every qualified reference.
+
+- **Column alias expansion** — `selectAs` goes further, rendering each column as `"alias"."column" as "alias_column"`. When querying multiple joined tables, result-set keys no longer collide.
+
+- **`concat` and `empty` as a monoid** — every tagged template and statement builder returns a `Fragment`. `concat` joins two fragments into one, and `empty` is the identity element. This lets you accumulate query fragments conditionally with `reduce`, compose them with `pipe`, or chain them with `.append` — treating query construction as plain data transformation.
+
+- **`all` and `pick` helpers** — expand an entire table's columns or a chosen subset into a comma-separated list inside any tag, so `SELECT ${all(users, posts)}` replaces repetitive column lists without losing type safety.
+
 ## Installation
 
 ```sh
@@ -12,19 +26,57 @@ npm install @vanit-co/sql-ts
 
 ## Quick example
 
+**sql** tagged template literal takes care of quoting the identifiers (tables and columns) with the proper quotes `` ` `` for MySQL and `"` for PostgreSQL.
+
 ```ts
-import { schema, select, where, all } from '@vanit-co/sql-ts'
+import { schema, sql, all } from '@vanit-co/sql-ts'
 
 const users = schema({ table: 'users', columns: ['id', 'email'] })
 
-const query = select`SELECT ${all(users)} FROM ${users} WHERE ${users.id} = ${42}`
+const query = sql`SELECT ${all(users)} FROM ${users} WHERE ${users.id} = ${42}`
 
 // PostgreSQL
-console.log(query.text)   // SELECT "users"."id" ,"users"."email" FROM "users" "users" WHERE "users"."id" = $1
-console.log(query.values) // [42]
+console.log(query.text)   // SELECT "id" ,"email" FROM "users" WHERE "id" = $1
 
 // MySQL
-console.log(query.sql)    // SELECT `users`.`id` ,`users`.`email` FROM `users` `users` WHERE `users`.`id` = ?
+console.log(query.sql)    // SELECT `id` ,`email` FROM `users` WHERE `id` = ?
+
+console.log(query.values) // [42]
+```
+
+## Full query example
+
+**select** tagged template literal works like **sql** but automatically adds table aliases and column prefixes. The other tagged template literals **join** and **where** are just aliases to **select** with the aim of maintaining semantics. The **selectAs** tagged template literal besides the column prefixes will also add the column alias using the format `$prefix_$columnName`.
+
+```ts
+import { schema, select, selectAs, join, where, all, insert, update, empty } from '@vanit-co/sql-ts'
+
+const users = schema({ table: 'users', columns: ['id', 'email'], alias: 'u' })
+const posts = schema({ table: 'posts', columns: ['id', 'user_id', 'title'], alias: 'p' })
+
+const id = 42
+
+// SELECT with JOIN
+const query = selectAs`SELECT ${all(users, posts)} FROM ${posts}`
+  .append(join`JOIN ${users} ON ${posts.user_id} = ${users.id}`)
+  .append(id ? where`WHERE ${users.id} = ${42}` : empty)
+
+query.text
+// SELECT "u"."id" as "u_id" ,"u"."email" as "u_email" ,"p"."id" as "p_id" ,"p"."user_id" as "p_user_id" ,"p"."title" as "p_title"
+// FROM "posts" "p"
+// JOIN "users" "u" ON "p"."user_id" = "u"."id"
+// WHERE "u"."id" = $1
+query.values // [42]
+
+// INSERT
+const ins = insert(users, { id: 1, email: 'alice@example.com' })
+ins.text    // insert into "users" ("id" ,"email") values ($1 ,$2)
+ins.values  // [1, 'alice@example.com']
+
+// UPDATE
+const upd = update(users, { email: 'new@example.com' })
+upd.text    // update "users" set "email" = $1
+upd.values  // ['new@example.com']
 ```
 
 ---
@@ -419,39 +471,6 @@ await client.query(named)
 ```
 
 `preparedStatementName` does not mutate the original result — it returns a new object.
-
----
-
-## Full query example
-
-```ts
-import { schema, select, selectAs, join, where, all, insert, update, concat } from '@vanit-co/sql-ts'
-
-const users = schema({ table: 'users', columns: ['id', 'email'], alias: 'u' })
-const posts = schema({ table: 'posts', columns: ['id', 'user_id', 'title'], alias: 'p' })
-
-// SELECT with JOIN
-const query = selectAs`SELECT ${all(users, posts)} FROM ${posts}`
-  .append(join`JOIN ${users} ON ${posts.user_id} = ${users.id}`)
-  .append(where`WHERE ${users.id} = ${42}`)
-
-query.text
-// SELECT "u"."id" as "u_id" ,"u"."email" as "u_email" ,"p"."id" as "p_id" ,"p"."user_id" as "p_user_id" ,"p"."title" as "p_title"
-// FROM "posts" "p"
-// JOIN "users" "u" ON "p"."user_id" = "u"."id"
-// WHERE "u"."id" = $1
-query.values // [42]
-
-// INSERT
-const ins = insert(users, { id: 1, email: 'alice@example.com' })
-ins.text    // insert into "users" ("id" ,"email") values ($1 ,$2)
-ins.values  // [1, 'alice@example.com']
-
-// UPDATE
-const upd = update(users, { email: 'new@example.com' })
-upd.text    // update "users" set "email" = $1
-upd.values  // ['new@example.com']
-```
 
 ---
 

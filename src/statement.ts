@@ -62,6 +62,8 @@ const selectAs = buildTag(alias)
 const join = select
 const where = select
 
+const empty: Result = sql``
+
 const insert = <T extends string>(table: SchemaTable<T> ,...colsVals: Array<{ [K in T]?: any }>): Result => {
   const tableName = table[sym.SYM_TABLE].name
   const columns = Object.keys(colsVals[0])
@@ -95,7 +97,8 @@ const update = <T extends string>(table: SchemaTable<T> ,colsVals: { [K in T]?: 
 }
 
 export {
-  sql
+  empty
+  ,sql
   ,select
   ,select as s
   ,selectAs

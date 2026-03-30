@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { sql, select, s, selectAs, sa, join, j, where, w, insert, update } from '../src/statement'
+import { empty ,sql, select, s, selectAs, sa, join, j, where, w, insert, update } from '../src/statement'
 import { schema } from '../src/schema'
 import { all, pick } from '../src/wildcard'
 
@@ -133,6 +133,13 @@ describe('aliases', () => {
 
   it('w is an alias for select', () => {
     expect(w`SELECT ${users.id}`.sql).toBe(select`SELECT ${users.id}`.sql)
+  })
+})
+
+describe('empty', () => {
+  it('has a single empty string and no binds', () => {
+    expect(empty.strings).toEqual([''])
+    expect(empty.binds).toEqual([])
   })
 })
 

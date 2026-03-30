@@ -16,15 +16,13 @@ const concat = (right: Fragment) => (left: Fragment): Result => {
   ))
 }
 
-const fragment = (strings: ReadonlyArray<string> ,binds: ReadonlyArray<unknown>): Fragment => {
+const fragment = (strings: ReadonlyArray<string> ,binds: ReadonlyArray<unknown> = []): Fragment => {
 
   if(strings.length !== binds.length + 1) 
     throw new Error(`Malformed fragment: ${strings.length} strings for ${binds.length} values`)
 
   return Object.freeze({ strings, binds })
 }
-
-const empty: Fragment = fragment([''], [])
 
 const stringfyIdentifierAndRaw = (quote: string = '') => (s: Fragment): Fragment => {
 
@@ -54,7 +52,6 @@ const stringfyIdentifierAndRaw = (quote: string = '') => (s: Fragment): Fragment
 export type { Fragment }
 export {
   concat
-  ,empty
   ,fragment
   ,stringfyIdentifierAndRaw
 }

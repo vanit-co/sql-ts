@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { fragment, concat, empty, stringfyIdentifierAndRaw } from '../src/fragment'
+import { fragment, concat, stringfyIdentifierAndRaw } from '../src/fragment'
+import { empty } from '../src/statement'
 import { raw } from '../src/wildcard'
 import { identifier } from '../src/identifier'
 
@@ -37,13 +38,6 @@ describe('fragment', () => {
   it('is frozen', () => {
     const f = fragment(['SELECT 1'], [])
     expect(Object.isFrozen(f)).toBe(true)
-  })
-})
-
-describe('empty', () => {
-  it('has a single empty string and no binds', () => {
-    expect(empty.strings).toEqual([''])
-    expect(empty.binds).toEqual([])
   })
 })
 
@@ -141,7 +135,7 @@ describe('stringfyIdentifierAndRaw', () => {
   })
 
   it('handles empty fragment', () => {
-    const out = stringfyIdentifierAndRaw('"')(empty)
+    const out = stringfyIdentifierAndRaw('"')(fragment(['']))
     expect(out.strings).toEqual([''])
     expect(out.binds).toEqual([])
   })

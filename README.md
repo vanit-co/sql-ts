@@ -105,6 +105,34 @@ const u = schema({ table: 'users', columns: ['id', 'email'], alias: 'u' })
 
 After calling `schema`, the returned object has a typed property for each column (`users.id`, `users.email`, etc.).
 
+### `as(column)`
+
+Returns the aliased column name as a plain string — the same `prefix_name` string that `selectAs` writes into the SQL `AS` clause. Use this to read a column out of query results by its aliased key without repeating the string manually.
+
+```ts
+import { schema, as, selectAs, all } from '@vanit-co/sql-ts'
+
+const users = schema({ table: 'users', columns: ['id', 'email'] })
+const u = schema({ table: 'users', columns: ['id', 'email'], alias: 'u' })
+
+as(users.id)     // 'users_id'
+as(users.email)  // 'users_email'
+
+as(u.id)         // 'u_id'
+as(u.email)      // 'u_email'
+```
+
+This is particularly useful when mapping over result rows:
+
+```ts
+const rows = await client.query(selectAs`SELECT ${all(users)} FROM ${users}`)
+
+rows.map(row => ({
+  id:    row[as(users.id)],    // row['users_id']
+  email: row[as(users.email)], // row['users_email']
+}))
+```
+
 ---
 
 ### Result object

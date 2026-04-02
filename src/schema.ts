@@ -36,5 +36,10 @@ const schema = <T extends string>({ table ,columns ,alias }: Params<T>): SchemaT
   } as SchemaTable<T>
 }
 
+const as = (col: { [K in symbol]: Column }): string => {
+  const c = col[sym.SYM_COLUMN] as Column
+  return c.prefix + '_' + c.name
+}
+
 export type { SchemaTable ,SchemaColumn ,Table ,Column }
-export { schema }
+export { schema ,as }

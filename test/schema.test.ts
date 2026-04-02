@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { schema } from '../src/schema'
+import { schema, as } from '../src/schema'
 import { SYM_COLUMN, SYM_TABLE } from '../src/symbol'
 
 describe('schema', () => {
@@ -60,5 +60,29 @@ describe('schema', () => {
       expect(s.total[SYM_COLUMN].name).toBe('total')
       expect(s.total[SYM_COLUMN].prefix).toBe('orders')
     })
+  })
+})
+
+describe('as', () => {
+  it('returns prefix_name format', () => {
+    const s = schema({ table: 'users', columns: ['id'] })
+    expect(as(s.id)).toBe('users_id')
+  })
+
+  it('uses alias as prefix when alias is provided', () => {
+    const s = schema({ table: 'users', columns: ['email'], alias: 'u' })
+    expect(as(s.email)).toBe('u_email')
+  })
+
+  it('uses table name as prefix when no alias', () => {
+    const s = schema({ table: 'orders', columns: ['total'] })
+    expect(as(s.total)).toBe('orders_total')
+  })
+
+  it('works with multiple columns independently', () => {
+    const s = schema({ table: 'products', columns: ['id', 'name', 'price'] })
+    expect(as(s.id)).toBe('products_id')
+    expect(as(s.name)).toBe('products_name')
+    expect(as(s.price)).toBe('products_price')
   })
 })

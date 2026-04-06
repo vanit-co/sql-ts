@@ -59,9 +59,6 @@ const sql = buildTag(pure)
 const select = buildTag(prefix)
 const selectAs = buildTag(alias)
 
-const join = select
-const where = select
-
 const empty: Result = sql``
 
 const insert = <T extends string>(table: SchemaTable<T> ,...colsVals: Array<{ [K in T]?: any }>): Result => {
@@ -103,10 +100,16 @@ export {
   ,select as s
   ,selectAs
   ,selectAs as sa
-  ,join
-  ,join as j
-  ,where
-  ,where as w
+  ,select as groupBy
+  ,select as g
+  ,select as having
+  ,select as h
+  ,select as join
+  ,select as j
+  ,select as orderBy
+  ,select as o
+  ,select as where
+  ,select as w
   ,insert
   ,update
 }

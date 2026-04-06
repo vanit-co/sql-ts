@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { empty ,sql, select, s, selectAs, sa, join, j, where, w, insert, update } from '../src/statement'
+import { empty ,sql, select, s, selectAs, sa, groupBy, g, having, h, join, j, orderBy, o, where, w, insert, update } from '../src/statement'
 import { schema } from '../src/schema'
 import { all, pick } from '../src/wildcard'
 
@@ -119,12 +119,36 @@ describe('aliases', () => {
     expect(sa`SELECT ${users.id}`.sql).toBe(selectAs`SELECT ${users.id}`.sql)
   })
 
+  it('groupBy is an alias for select', () => {
+    expect(groupBy`FROM ${users}`.sql).toBe(select`FROM ${users}`.sql)
+  })
+
+  it('g is an alias for select', () => {
+    expect(g`FROM ${users}`.sql).toBe(select`FROM ${users}`.sql)
+  })
+
+  it('having is an alias for select', () => {
+    expect(having`FROM ${users}`.sql).toBe(select`FROM ${users}`.sql)
+  })
+
+  it('h is an alias for select', () => {
+    expect(h`FROM ${users}`.sql).toBe(select`FROM ${users}`.sql)
+  })
+
   it('join is an alias for select', () => {
     expect(join`FROM ${users}`.sql).toBe(select`FROM ${users}`.sql)
   })
 
   it('j is an alias for select', () => {
     expect(j`FROM ${users}`.sql).toBe(select`FROM ${users}`.sql)
+  })
+
+  it('orderBy is an alias for select', () => {
+    expect(orderBy`FROM ${users}`.sql).toBe(select`FROM ${users}`.sql)
+  })
+
+  it('o is an alias for select', () => {
+    expect(o`FROM ${users}`.sql).toBe(select`FROM ${users}`.sql)
   })
 
   it('where is an alias for select', () => {

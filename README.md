@@ -10,7 +10,7 @@ Writing raw SQL in TypeScript runs into a set of recurring friction points that 
 
 - **Automatic identifier quoting** — table and column names are interpolated as properly quoted identifiers (`` `name` `` for MySQL, `"name"` for PostgreSQL), never as bind parameters. No manual quoting, no dialect-specific escaping scattered across your codebase.
 
-- **Table alias and qualified column references** — the `select` tag (and its aliases `join`, `where`) automatically expands schema tables as `"table" "alias"` and columns as `"alias"."column"`, so JOIN-heavy queries stay unambiguous without hand-writing every qualified reference.
+- **Table alias and qualified column references** — the `select` tag (and its aliases `groupBy`, `having`, `join`, `orderBy`, `where`) automatically expands schema tables as `"table" "alias"` and columns as `"alias"."column"`, so JOIN-heavy queries stay unambiguous without hand-writing every qualified reference.
 
 - **Column alias expansion** — `selectAs` goes further, rendering each column as `"alias"."column" as "alias_column"`. When querying multiple joined tables, result-set keys no longer collide.
 
@@ -26,7 +26,7 @@ npm install @vanit-co/sql-ts
 
 ## Quick example
 
-**sql** tagged template literal takes care of quoting the identifiers (tables and columns) with the proper quotes `` ` `` for MySQL and `"` for PostgreSQL.
+**sql** tag takes care of quoting the identifiers (tables and columns) with the proper quotes `` ` `` for MySQL and `"` for PostgreSQL.
 
 ```ts
 import { schema, sql, all } from '@vanit-co/sql-ts'
@@ -46,7 +46,7 @@ console.log(query.values) // [42]
 
 ## Full query example
 
-**select** tagged template literal works like **sql** but automatically adds table aliases and column prefixes. The other tagged template literals **join** and **where** are just aliases to **select** with the aim of maintaining semantics. The **selectAs** tagged template literal besides the column prefixes will also add the column alias using the format `$prefix_$columnName`.
+**select** tag works like **sql** but automatically adds table aliases and column prefixes. The other tags **groupBy**, **having**, **join**, **orderBy** and **where** are just aliases to **select** with the aim of maintaining semantics. The **selectAs** tag besides the column prefixes will also add the column alias using the format `$prefix_$columnName`.
 
 ```ts
 import { schema, select, selectAs, join, where, all, insert, update, empty } from '@vanit-co/sql-ts'
@@ -74,9 +74,9 @@ ins.text    // insert into "users" ("id" ,"email") values ($1 ,$2)
 ins.values  // [1, 'alice@example.com']
 
 // UPDATE
-const upd = update(users, { email: 'new@example.com' })
-upd.text    // update "users" set "email" = $1
-upd.values  // ['new@example.com']
+const upd = update(users, { email: 'new@example.com' }).append(sql` where ${users.id} = ${id}`)
+upd.text    // update "users" set "email" = $1 where "id" = $2
+upd.values  // ['new@example.com', 42]
 ```
 
 ---
@@ -197,20 +197,23 @@ selectAs`SELECT ${users.email}`.text // SELECT "users"."email" as "users_email"
 sa`SELECT ${u.email}`.text  // SELECT "u"."email" as "u_email"
 ```
 
-### `join` (alias: `j`) and `where` (alias: `w`)
+### `groupBy` (alias: `g`), `having` (alias: `h`), `join` (alias: `j`), `orderBy` (alias: `o`) and `where` (alias: `w`)
 
-These are identical to `select`. They exist as semantic aliases so your query construction reads naturally.
+These are all identical to `select`. They exist as semantic aliases so your query construction reads naturally — each tag signals which SQL clause it belongs to.
 
 ```ts
-import { select, join, j, where, w, schema } from '@vanit-co/sql-ts'
+import { select, join, j, where, w, groupBy, g, having, h, orderBy, o, schema } from '@vanit-co/sql-ts'
 
 const posts = schema({ table: 'posts', columns: ['id', 'user_id', 'title'] })
 const users = schema({ table: 'users', columns: ['id', 'email'] })
 
 const q = select`SELECT ${posts.title}, ${users.email}`
-const fromClause  = join`FROM ${posts}`
-const joinClause  = join`JOIN ${users} ON ${posts.user_id} = ${users.id}`
-const whereClause = where`WHERE ${users.id} = ${99}`
+const fromClause = join` FROM ${posts}`
+const joinClause = join` JOIN ${users} ON ${posts.user_id} = ${users.id}`
+const whereClause = where` WHERE ${users.id} = ${99}`
+const groupClause = groupBy` GROUP BY ${posts.title}`
+const havingClause = having` HAVING COUNT(${posts.id}) > ${1}`
+const orderClause = orderBy` ORDER BY ${posts.title}`
 ```
 
 ---
@@ -382,7 +385,7 @@ const posts = schema({ table: 'posts', columns: ['id', 'user_id', 'title'], alia
 
 const buildQuery = (userId: number) =>
   pipe(
-    concat(join`  JOIN ${users} ON ${posts.user_id} = ${users.id}`),
+    concat(join` JOIN ${users} ON ${posts.user_id} = ${users.id}`),
     concat(where` WHERE ${users.id} = ${userId}`)
   )(selectAs`SELECT ${all(users, posts)} FROM ${posts}`)
 
@@ -404,7 +407,7 @@ import { schema, selectAs, join, where, concat, all } from '@vanit-co/sql-ts'
 
 const q = pipe(
   selectAs`SELECT ${all(users, posts)} FROM ${posts}`,
-  concat(join`  JOIN ${users} ON ${posts.user_id} = ${users.id}`),
+  concat(join` JOIN ${users} ON ${posts.user_id} = ${users.id}`),
   concat(where` WHERE ${users.id} = ${42}`)
 )
 ```
@@ -425,9 +428,9 @@ type Filters = { userId?: number; titleLike?: string }
 const buildPostsQuery = ({ userId, titleLike }: Filters) => {
   const clauses = [
     select`SELECT ${all(users, posts)} FROM ${posts}`,
-    join`  JOIN ${users} ON ${posts.user_id} = ${users.id}`,
-    userId    ? where` WHERE ${users.id} = ${userId}`          : empty,
-    titleLike ? where`   AND ${posts.title} LIKE ${titleLike}` : empty,
+    join` JOIN ${users} ON ${posts.user_id} = ${users.id}`,
+    userId ? where` WHERE ${users.id} = ${userId}` : empty,
+    titleLike ? where` AND ${posts.title} LIKE ${titleLike}` : empty,
   ]
 
   return reduce(

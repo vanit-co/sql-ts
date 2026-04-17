@@ -1,8 +1,8 @@
 {
   "name": "@vanit-co/sql-ts",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "A TypeScript SQL query builder using tagged template literals. Write plain SQL with safe, automatic parameter binding and properly quoted identifiers. No DSL to learn, no magic, no ORM.",
-  "type": "module",
+  "type": "commonjs",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [

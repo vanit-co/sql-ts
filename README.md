@@ -8,15 +8,15 @@ Supports **MySQL** (`?` placeholders, `` ` `` backtick identifiers) and **Postgr
 
 Writing raw SQL in TypeScript runs into a set of recurring friction points that this library addresses directly:
 
-- **Automatic identifier quoting** — table and column names are interpolated as properly quoted identifiers (`` `name` `` for MySQL, `"name"` for PostgreSQL), never as bind parameters. No manual quoting, no dialect-specific escaping scattered across your codebase.
+- **Automatic identifier quoting** - table and column names are interpolated as properly quoted identifiers (`` `name` `` for MySQL, `"name"` for PostgreSQL), never as bind parameters. No manual quoting, no dialect-specific escaping scattered across your codebase.
 
-- **Table alias and qualified column references** — the `select` tag (and its aliases `groupBy`, `having`, `join`, `orderBy`, `where`) automatically expands schema tables as `"table" "alias"` and columns as `"alias"."column"`, so JOIN-heavy queries stay unambiguous without hand-writing every qualified reference.
+- **Table alias and qualified column references** - the `select` tag (and its aliases `groupBy`, `having`, `join`, `orderBy`, `where`) automatically expands schema tables as `"table" "alias"` and columns as `"alias"."column"`, so JOIN-heavy queries stay unambiguous without hand-writing every qualified reference.
 
-- **Column alias expansion** — `selectAs` goes further, rendering each column as `"alias"."column" as "alias_column"`. When querying multiple joined tables, result-set keys no longer collide.
+- **Column alias expansion** - `selectAs` goes further, rendering each column as `"alias"."column" as "alias_column"`. When querying multiple joined tables, result-set keys no longer collide.
 
-- **`concat` and `empty` as a monoid** — every tagged template and statement builder returns a `Fragment`. `concat` joins two fragments into one, and `empty` is the identity element. This lets you accumulate query fragments conditionally with `reduce`, compose them with `pipe`, or chain them with `.append` — treating query construction as plain data transformation.
+- **`concat` and `empty` as a monoid** - every tagged template and statement builder returns a `Fragment`. `concat` joins two fragments into one, and `empty` is the identity element. This lets you accumulate query fragments conditionally with `reduce`, compose them with `pipe`, or chain them with `.append` - treating query construction as plain data transformation.
 
-- **`all` and `pick` helpers** — expand an entire table's columns or a chosen subset into a comma-separated list inside any tag, so `SELECT ${all(users, posts)}` replaces repetitive column lists without losing type safety.
+- **`all` and `pick` helpers** - expand an entire table's columns or a chosen subset into a comma-separated list inside any tag, so `SELECT ${all(users, posts)}` replaces repetitive column lists without losing type safety.
 
 ## Installation
 
@@ -199,7 +199,7 @@ sa`SELECT ${u.email}`.text  // SELECT "u"."email" as "u_email"
 
 ### `groupBy` (alias: `g`), `having` (alias: `h`), `join` (alias: `j`), `orderBy` (alias: `o`) and `where` (alias: `w`)
 
-These are all identical to `select`. They exist as semantic aliases so your query construction reads naturally — each tag signals which SQL clause it belongs to.
+These are all identical to `select`. They exist as semantic aliases so your query construction reads naturally - each tag signals which SQL clause it belongs to.
 
 ```ts
 import { select, join, j, where, w, groupBy, g, having, h, orderBy, o, schema } from '@vanit-co/sql-ts'
@@ -270,7 +270,7 @@ selectAs`SELECT ${pick(users.id, users.email)}`.text
 
 ### `as(column)`
 
-Returns the aliased column name as a plain string — the same `prefix_name` string that `selectAs` writes into the SQL `AS` clause. Use this to read a column out of query results by its aliased key without repeating the string manually.
+Returns the aliased column name as a plain string - the same `prefix_name` string that `selectAs` writes into the SQL `AS` clause. Use this to read a column out of query results by its aliased key without repeating the string manually.
 
 ```ts
 import { schema, as, selectAs, all } from '@vanit-co/sql-ts'
@@ -325,7 +325,7 @@ q2.values  // [1, 'alice@example.com', 2, 'bob@example.com']
 
 ### `update(table, colsVals)`
 
-Builds a parameterised `UPDATE ... SET ...` statement (without a `WHERE` clause — compose that separately using `concat`).
+Builds a parameterised `UPDATE ... SET ...` statement (without a `WHERE` clause - compose that separately using `concat`).
 
 ```ts
 import { schema, update } from '@vanit-co/sql-ts'
@@ -348,7 +348,7 @@ q2.values  // [99, 'updated@example.com']
 
 ### `concat`
 
-Joins two `Fragment` objects into one. `concat` is curried — `concat(right)(left)` appends `right` after `left`.
+Joins two `Fragment` objects into one. `concat` is curried - `concat(right)(left)` appends `right` after `left`.
 
 ```ts
 import { select, where, concat, schema } from '@vanit-co/sql-ts'
@@ -414,7 +414,7 @@ const q = pipe(
 
 ### `empty`
 
-An empty fragment. Acts as the identity element for `concat` — useful as the starting value when accumulating fragments conditionally.
+An empty fragment. Acts as the identity element for `concat` - useful as the starting value when accumulating fragments conditionally.
 
 ```ts
 import { pipe, reduce } from 'ramda'
@@ -501,7 +501,7 @@ named.values // [1]
 await client.query(named)
 ```
 
-`preparedStatementName` does not mutate the original result — it returns a new object.
+`preparedStatementName` does not mutate the original result - it returns a new object.
 
 ---
 

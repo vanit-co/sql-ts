@@ -14,6 +14,8 @@ const transformer = (table: (s: string ,t: Table) => Array<Pair> ,column: (s: st
 
   if(bs === undefined) return [[ss]]
 
+  if(bs === null) return [[ss ,bs]]
+
   if(bs[sym.SYM_TABLE]) return table(ss ,bs[sym.SYM_TABLE] as Table)
 
   if(bs[sym.SYM_COLUMN]) return column(ss ,bs[sym.SYM_COLUMN] as Column)

@@ -50,6 +50,50 @@ describe('sql', () => {
   })
 })
 
+describe('null bind values', () => {
+  it('sql interpolates null as a bind parameter', () => {
+    const r = sql`SELECT * FROM users WHERE id = ${null}`
+    expect(r.sql).toBe('SELECT * FROM users WHERE id = ?')
+    expect(r.text).toBe('SELECT * FROM users WHERE id = $1')
+    expect(r.values).toEqual([null])
+  })
+
+  it('sql interpolates null alongside other values', () => {
+    const r = sql`SELECT * FROM users WHERE id = ${1} AND name = ${null}`
+    expect(r.sql).toBe('SELECT * FROM users WHERE id = ? AND name = ?')
+    expect(r.text).toBe('SELECT * FROM users WHERE id = $1 AND name = $2')
+    expect(r.values).toEqual([1, null])
+  })
+
+  it('select interpolates null as a bind parameter', () => {
+    const r = select`SELECT ${users.id} WHERE email = ${null}`
+    expect(r.sql).toBe('SELECT `users`.`id` WHERE email = ?')
+    expect(r.text).toBe('SELECT "users"."id" WHERE email = $1')
+    expect(r.values).toEqual([null])
+  })
+
+  it('insert accepts null column values', () => {
+    const r = insert(users, { id: 1, email: null })
+    expect(r.sql).toBe('insert into `users` (`id` ,`email`) values (? ,?)')
+    expect(r.text).toBe('insert into "users" ("id" ,"email") values ($1 ,$2)')
+    expect(r.values).toEqual([1, null])
+  })
+
+  it('update accepts null column values', () => {
+    const r = update(users, { email: null })
+    expect(r.sql).toBe('update `users` set `email` = ?')
+    expect(r.text).toBe('update "users" set "email" = $1')
+    expect(r.values).toEqual([null])
+  })
+
+  it('handles multiple null values', () => {
+    const r = sql`INSERT INTO t (a, b) VALUES (${null}, ${null})`
+    expect(r.sql).toBe('INSERT INTO t (a, b) VALUES (?, ?)')
+    expect(r.text).toBe('INSERT INTO t (a, b) VALUES ($1, $2)')
+    expect(r.values).toEqual([null, null])
+  })
+})
+
 describe('select', () => {
   it('interpolates a Table as name followed by alias (when alias equals table name)', () => {
     const r = select`FROM ${users}`

@@ -31,7 +31,7 @@ const result = (s: Fragment): Result => ({
     return toPostgres(s).text
   }
   ,get values() {
-    return s.binds.filter((x: any) => !(x[SYM_RAW] || x[SYM_IDENTIFIER]))
+    return s.binds.filter((x: any) => !(x && (x[SYM_RAW] || x[SYM_IDENTIFIER])))
   }
 })
 

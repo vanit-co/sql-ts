@@ -23,7 +23,7 @@ const stringfyIdentifierAndRaw = (quote: string = '') => (s: Fragment): Fragment
       return [strings ,binds ,[...merge, ss, bs.content]]
     }
     else if(bs && bs[sym.SYM_IDENTIFIER]) {
-      return [strings ,binds ,[...merge, ss, (quote + bs.content + quote)]]
+      return [strings ,binds ,[...merge, ss, (quote + bs.content.replaceAll(quote, quote + quote) + quote)]]
     }
     else if(bs !== undefined) {
       return [[...strings ,merge.join('') + ss] ,[...binds ,bs] ,[]]

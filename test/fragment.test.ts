@@ -98,4 +98,18 @@ describe('stringfyIdentifierAndRaw', () => {
     expect(out.strings).toEqual(['NOW() NOW()'])
     expect(out.binds).toEqual([])
   })
+
+  it('escapes double quotes inside identifier for postgres', () => {
+    const f = fragment(['SELECT * FROM ', ''], [identifier('users"; DROP TABLE users--')])
+    const out = stringfyIdentifierAndRaw('"')(f)
+    expect(out.strings).toEqual(['SELECT * FROM "users""; DROP TABLE users--"'])
+    expect(out.binds).toEqual([])
+  })
+
+  it('escapes backticks inside identifier for mysql', () => {
+    const f = fragment(['SELECT * FROM ', ''], [identifier('users`; DROP TABLE users--')])
+    const out = stringfyIdentifierAndRaw('`')(f)
+    expect(out.strings).toEqual(['SELECT * FROM `users``; DROP TABLE users--`'])
+    expect(out.binds).toEqual([])
+  })
 })

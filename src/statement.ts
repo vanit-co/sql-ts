@@ -53,7 +53,7 @@ const alias = transformer(
 )
 
 const buildTag = (fn: PairTransformer) => (strings: TemplateStringsArray ,...binds: Array<any>): Result => {
-  const [s ,v] = transpose(zipLongest(strings as unknown as Array<string> ,binds).flatMap(fn))
+  const [s ,v] = transpose(zipLongest(strings as unknown as Array<string> ,binds.map(b => b === undefined ? null : b)).flatMap(fn))
   return result(fragment(s ,v ?? []))
 }
 
@@ -75,7 +75,7 @@ const insert = <T extends string>(table: SchemaTable<T> ,...colsVals: Array<{ [K
       const rowStrings = columns.map((_, colIdx) =>
         colIdx === 0 ? (rowIdx === 0 ? ') values (' : ') ,(') : ' ,'
       )
-      return [[...ss, ...rowStrings], [...bs, ...columns.map(c => row[c as T])]]
+      return [[...ss, ...rowStrings], [...bs, ...columns.map(c => row[c as T] ?? null)]]
     }
     ,[[] ,[]]
   )
@@ -88,7 +88,7 @@ const update = <T extends string>(table: SchemaTable<T> ,colsVals: { [K in T]?: 
   const entries = Object.entries(colsVals)
 
   const [strings ,binds] = entries.reduce<[Array<string> ,Array<any>]>(
-    ([ss ,bs], [colName, value], i) => [[...ss ,i === 0 ? ' set ' : ' ,' ,' = '] ,[...bs ,identifier(colName) ,value]]
+    ([ss ,bs], [colName, value], i) => [[...ss ,i === 0 ? ' set ' : ' ,' ,' = '] ,[...bs ,identifier(colName) ,value ?? null]]
     ,[['update '] ,[identifier(tableName)]]
   )
 

@@ -94,6 +94,57 @@ describe('null bind values', () => {
   })
 })
 
+describe('undefined bind values', () => {
+  it('sql interpolates undefined as a null bind parameter', () => {
+    const r = sql`SELECT * FROM users WHERE id = ${undefined}`
+    expect(r.sql).toBe('SELECT * FROM users WHERE id = ?')
+    expect(r.text).toBe('SELECT * FROM users WHERE id = $1')
+    expect(r.values).toEqual([null])
+  })
+
+  it('sql interpolates undefined alongside other values', () => {
+    const r = sql`SELECT * FROM users WHERE id = ${1} AND name = ${undefined}`
+    expect(r.sql).toBe('SELECT * FROM users WHERE id = ? AND name = ?')
+    expect(r.text).toBe('SELECT * FROM users WHERE id = $1 AND name = $2')
+    expect(r.values).toEqual([1, null])
+  })
+
+  it('select interpolates undefined as a null bind parameter', () => {
+    const r = select`SELECT ${users.id} WHERE email = ${undefined}`
+    expect(r.sql).toBe('SELECT `users`.`id` WHERE email = ?')
+    expect(r.text).toBe('SELECT "users"."id" WHERE email = $1')
+    expect(r.values).toEqual([null])
+  })
+
+  it('insert accepts undefined column values', () => {
+    const r = insert(users, { id: 1, email: undefined })
+    expect(r.sql).toBe('insert into `users` (`id` ,`email`) values (? ,?)')
+    expect(r.text).toBe('insert into "users" ("id" ,"email") values ($1 ,$2)')
+    expect(r.values).toEqual([1, null])
+  })
+
+  it('update accepts undefined column values', () => {
+    const r = update(users, { email: undefined })
+    expect(r.sql).toBe('update `users` set `email` = ?')
+    expect(r.text).toBe('update "users" set "email" = $1')
+    expect(r.values).toEqual([null])
+  })
+
+  it('handles multiple undefined values', () => {
+    const r = sql`INSERT INTO t (a, b) VALUES (${undefined}, ${undefined})`
+    expect(r.sql).toBe('INSERT INTO t (a, b) VALUES (?, ?)')
+    expect(r.text).toBe('INSERT INTO t (a, b) VALUES ($1, $2)')
+    expect(r.values).toEqual([null, null])
+  })
+
+  it('mixed null and undefined produce identical results', () => {
+    const r = sql`SELECT * WHERE a = ${null} AND b = ${undefined}`
+    expect(r.sql).toBe('SELECT * WHERE a = ? AND b = ?')
+    expect(r.text).toBe('SELECT * WHERE a = $1 AND b = $2')
+    expect(r.values).toEqual([null, null])
+  })
+})
+
 describe('select', () => {
   it('interpolates a Table as name followed by alias (when alias equals table name)', () => {
     const r = select`FROM ${users}`

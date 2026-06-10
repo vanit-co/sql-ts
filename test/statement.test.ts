@@ -95,53 +95,53 @@ describe('null bind values', () => {
 })
 
 describe('undefined bind values', () => {
-  it('sql interpolates undefined as a null bind parameter', () => {
+  it('sql discards an undefined bind parameter', () => {
     const r = sql`SELECT * FROM users WHERE id = ${undefined}`
-    expect(r.sql).toBe('SELECT * FROM users WHERE id = ?')
-    expect(r.text).toBe('SELECT * FROM users WHERE id = $1')
-    expect(r.values).toEqual([null])
+    expect(r.sql).toBe('SELECT * FROM users WHERE id = ')
+    expect(r.text).toBe('SELECT * FROM users WHERE id = ')
+    expect(r.values).toEqual([])
   })
 
-  it('sql interpolates undefined alongside other values', () => {
+  it('sql discards undefined while keeping other values', () => {
     const r = sql`SELECT * FROM users WHERE id = ${1} AND name = ${undefined}`
-    expect(r.sql).toBe('SELECT * FROM users WHERE id = ? AND name = ?')
-    expect(r.text).toBe('SELECT * FROM users WHERE id = $1 AND name = $2')
-    expect(r.values).toEqual([1, null])
+    expect(r.sql).toBe('SELECT * FROM users WHERE id = ? AND name = ')
+    expect(r.text).toBe('SELECT * FROM users WHERE id = $1 AND name = ')
+    expect(r.values).toEqual([1])
   })
 
-  it('select interpolates undefined as a null bind parameter', () => {
+  it('select discards an undefined bind parameter', () => {
     const r = select`SELECT ${users.id} WHERE email = ${undefined}`
-    expect(r.sql).toBe('SELECT `users`.`id` WHERE email = ?')
-    expect(r.text).toBe('SELECT "users"."id" WHERE email = $1')
-    expect(r.values).toEqual([null])
+    expect(r.sql).toBe('SELECT `users`.`id` WHERE email = ')
+    expect(r.text).toBe('SELECT "users"."id" WHERE email = ')
+    expect(r.values).toEqual([])
   })
 
-  it('insert accepts undefined column values', () => {
+  it('insert discards undefined column values', () => {
     const r = insert(users, { id: 1, email: undefined })
-    expect(r.sql).toBe('insert into `users` (`id` ,`email`) values (? ,?)')
-    expect(r.text).toBe('insert into "users" ("id" ,"email") values ($1 ,$2)')
-    expect(r.values).toEqual([1, null])
+    expect(r.sql).toBe('insert into `users` (`id`) values (?)')
+    expect(r.text).toBe('insert into "users" ("id") values ($1)')
+    expect(r.values).toEqual([1])
   })
 
-  it('update accepts undefined column values', () => {
-    const r = update(users, { email: undefined })
-    expect(r.sql).toBe('update `users` set `email` = ?')
-    expect(r.text).toBe('update "users" set "email" = $1')
-    expect(r.values).toEqual([null])
+  it('update discards undefined column values', () => {
+    const r = update(users, { id: 1, email: undefined })
+    expect(r.sql).toBe('update `users` set `id` = ?')
+    expect(r.text).toBe('update "users" set "id" = $1')
+    expect(r.values).toEqual([1])
   })
 
-  it('handles multiple undefined values', () => {
+  it('discards multiple undefined values', () => {
     const r = sql`INSERT INTO t (a, b) VALUES (${undefined}, ${undefined})`
-    expect(r.sql).toBe('INSERT INTO t (a, b) VALUES (?, ?)')
-    expect(r.text).toBe('INSERT INTO t (a, b) VALUES ($1, $2)')
-    expect(r.values).toEqual([null, null])
+    expect(r.sql).toBe('INSERT INTO t (a, b) VALUES (, )')
+    expect(r.text).toBe('INSERT INTO t (a, b) VALUES (, )')
+    expect(r.values).toEqual([])
   })
 
-  it('mixed null and undefined produce identical results', () => {
+  it('keeps null but discards undefined', () => {
     const r = sql`SELECT * WHERE a = ${null} AND b = ${undefined}`
-    expect(r.sql).toBe('SELECT * WHERE a = ? AND b = ?')
-    expect(r.text).toBe('SELECT * WHERE a = $1 AND b = $2')
-    expect(r.values).toEqual([null, null])
+    expect(r.sql).toBe('SELECT * WHERE a = ? AND b = ')
+    expect(r.text).toBe('SELECT * WHERE a = $1 AND b = ')
+    expect(r.values).toEqual([null])
   })
 })
 

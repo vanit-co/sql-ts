@@ -52,8 +52,23 @@ const alias = transformer(
   ]
 )
 
+const dropUndefined = (strings: Array<string> ,binds: Array<any>): [Array<string> ,Array<any>] => {
+  const outStrings: Array<string> = []
+  const outBinds: Array<any> = []
+  let carry = ''
+
+  strings.forEach((s ,i) => {
+    if(i === strings.length - 1) outStrings.push(carry + s)
+    else if(binds[i] === undefined) carry = carry + s
+    else { outStrings.push(carry + s) ;outBinds.push(binds[i]) ;carry = '' }
+  })
+
+  return [outStrings ,outBinds]
+}
+
 const buildTag = (fn: PairTransformer) => (strings: TemplateStringsArray ,...binds: Array<any>): Result => {
-  const [s ,v] = transpose(zipLongest(strings as unknown as Array<string> ,binds.map(b => b === undefined ? null : b)).flatMap(fn))
+  const [ss ,bs] = dropUndefined(strings as unknown as Array<string> ,binds)
+  const [s ,v] = transpose(zipLongest(ss ,bs).flatMap(fn))
   return result(fragment(s ,v ?? []))
 }
 
@@ -65,7 +80,7 @@ const empty: Result = sql``
 
 const insert = <T extends string>(table: SchemaTable<T> ,...colsVals: Array<{ [K in T]?: any }>): Result => {
   const tableName = table[sym.SYM_TABLE].name
-  const columns = Object.keys(colsVals[0])
+  const columns = Object.keys(colsVals[0]).filter(c => colsVals[0][c as T] !== undefined)
 
   const colStrings = columns.map((_, i) => i === 0 ? ' (' : ' ,')
   const colBinds = columns.map(c => identifier(c))
@@ -75,7 +90,7 @@ const insert = <T extends string>(table: SchemaTable<T> ,...colsVals: Array<{ [K
       const rowStrings = columns.map((_, colIdx) =>
         colIdx === 0 ? (rowIdx === 0 ? ') values (' : ') ,(') : ' ,'
       )
-      return [[...ss, ...rowStrings], [...bs, ...columns.map(c => row[c as T] ?? null)]]
+      return [[...ss, ...rowStrings], [...bs, ...columns.map(c => row[c as T])]]
     }
     ,[[] ,[]]
   )
@@ -85,10 +100,10 @@ const insert = <T extends string>(table: SchemaTable<T> ,...colsVals: Array<{ [K
 
 const update = <T extends string>(table: SchemaTable<T> ,colsVals: { [K in T]?: any }): Result => {
   const tableName = table[sym.SYM_TABLE].name
-  const entries = Object.entries(colsVals)
+  const entries = Object.entries(colsVals).filter(([, value]) => value !== undefined)
 
   const [strings ,binds] = entries.reduce<[Array<string> ,Array<any>]>(
-    ([ss ,bs], [colName, value], i) => [[...ss ,i === 0 ? ' set ' : ' ,' ,' = '] ,[...bs ,identifier(colName) ,value ?? null]]
+    ([ss ,bs], [colName, value], i) => [[...ss ,i === 0 ? ' set ' : ' ,' ,' = '] ,[...bs ,identifier(colName) ,value]]
     ,[['update '] ,[identifier(tableName)]]
   )
 

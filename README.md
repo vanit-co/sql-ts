@@ -328,6 +328,8 @@ q3.text    // insert into "users" ("id" ,"email") values (nextval('users_id_seq'
 q3.values  // ['alice@example.com']
 ```
 
+Column objects used as values are resolved to quoted identifiers rather than bound. They render unprefixed, since the statement has no alias in scope.
+
 ### `update(table, colsVals)`
 
 Builds a parameterised `UPDATE ... SET ...` statement (without a `WHERE` clause - compose that separately using `concat`).
@@ -350,6 +352,11 @@ q2.values  // [99, 'updated@example.com']
 const q3 = update(users, { id: raw('id + 1'), email: 'updated@example.com' })
 q3.text    // update "users" set "id" = id + 1 ,"email" = $1
 q3.values  // ['updated@example.com']
+
+// Column objects as values, resolved to quoted identifiers
+const q4 = update(users, { email: users.id })
+q4.text    // update "users" set "email" = "id"
+q4.values  // []
 ```
 
 ---

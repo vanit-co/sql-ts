@@ -78,6 +78,9 @@ const selectAs = buildTag(alias)
 
 const empty: Result = sql``
 
+const value = (v: any): any =>
+  v && v[sym.SYM_COLUMN] ? identifier((v[sym.SYM_COLUMN] as Column).name) : v
+
 const insert = <T extends string>(table: SchemaTable<T> ,...colsVals: Array<{ [K in T]?: any }>): Result => {
   const tableName = table[sym.SYM_TABLE].name
   const columns = Object.keys(colsVals[0]).filter(c => colsVals[0][c as T] !== undefined)
@@ -90,7 +93,7 @@ const insert = <T extends string>(table: SchemaTable<T> ,...colsVals: Array<{ [K
       const rowStrings = columns.map((_, colIdx) =>
         colIdx === 0 ? (rowIdx === 0 ? ') values (' : ') ,(') : ' ,'
       )
-      return [[...ss, ...rowStrings], [...bs, ...columns.map(c => row[c as T])]]
+      return [[...ss, ...rowStrings], [...bs, ...columns.map(c => value(row[c as T]))]]
     }
     ,[[] ,[]]
   )
@@ -100,10 +103,10 @@ const insert = <T extends string>(table: SchemaTable<T> ,...colsVals: Array<{ [K
 
 const update = <T extends string>(table: SchemaTable<T> ,colsVals: { [K in T]?: any }): Result => {
   const tableName = table[sym.SYM_TABLE].name
-  const entries = Object.entries(colsVals).filter(([, value]) => value !== undefined)
+  const entries = Object.entries(colsVals).filter(([, v]) => v !== undefined)
 
   const [strings ,binds] = entries.reduce<[Array<string> ,Array<any>]>(
-    ([ss ,bs], [colName, value], i) => [[...ss ,i === 0 ? ' set ' : ' ,' ,' = '] ,[...bs ,identifier(colName) ,value]]
+    ([ss ,bs], [colName, v], i) => [[...ss ,i === 0 ? ' set ' : ' ,' ,' = '] ,[...bs ,identifier(colName) ,value(v)]]
     ,[['update '] ,[identifier(tableName)]]
   )
 

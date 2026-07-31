@@ -434,6 +434,27 @@ describe('insert', () => {
     expect(r.text).toBe('insert into "users" ("id" ,"email") values (default ,$1) ,(default ,$2)')
     expect(r.values).toEqual(['a@x.com', 'b@x.com'])
   })
+
+  it('resolves a column object value as an identifier, not a bind param', () => {
+    const r = insert(users, { id: 1, email: users.id })
+    expect(r.sql).toBe('insert into `users` (`id` ,`email`) values (? ,`id`)')
+    expect(r.text).toBe('insert into "users" ("id" ,"email") values ($1 ,"id")')
+    expect(r.values).toEqual([1])
+  })
+
+  it('resolves a column object value without its alias prefix', () => {
+    const r = insert(usersAliased, { id: 1, email: usersAliased.id })
+    expect(r.sql).toBe('insert into `users` (`id` ,`email`) values (? ,`id`)')
+    expect(r.text).toBe('insert into "users" ("id" ,"email") values ($1 ,"id")')
+    expect(r.values).toEqual([1])
+  })
+
+  it('resolves column object values across multiple rows', () => {
+    const r = insert(users, { id: 1, email: users.id }, { id: 2, email: users.id })
+    expect(r.sql).toBe('insert into `users` (`id` ,`email`) values (? ,`id`) ,(? ,`id`)')
+    expect(r.text).toBe('insert into "users" ("id" ,"email") values ($1 ,"id") ,($2 ,"id")')
+    expect(r.values).toEqual([1, 2])
+  })
 })
 
 describe('update', () => {
@@ -480,5 +501,26 @@ describe('update', () => {
     expect(r.sql).toBe('update `users` set `id` = id + 1')
     expect(r.text).toBe('update "users" set "id" = id + 1')
     expect(r.values).toEqual([])
+  })
+
+  it('resolves a column object value as an identifier, not a bind param', () => {
+    const r = update(users, { email: users.id })
+    expect(r.sql).toBe('update `users` set `email` = `id`')
+    expect(r.text).toBe('update "users" set "email" = "id"')
+    expect(r.values).toEqual([])
+  })
+
+  it('resolves a column object value without its alias prefix', () => {
+    const r = update(usersAliased, { email: usersAliased.id })
+    expect(r.sql).toBe('update `users` set `email` = `id`')
+    expect(r.text).toBe('update "users" set "email" = "id"')
+    expect(r.values).toEqual([])
+  })
+
+  it('mixes a column object value with a bind param', () => {
+    const r = update(users, { id: 99, email: users.id })
+    expect(r.sql).toBe('update `users` set `id` = ? ,`email` = `id`')
+    expect(r.text).toBe('update "users" set "id" = $1 ,"email" = "id"')
+    expect(r.values).toEqual([99])
   })
 })

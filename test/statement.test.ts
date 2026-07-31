@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { empty ,sql, select, s, selectAs, sa, groupBy, g, having, h, join, j, orderBy, o, where, w, insert, update } from '../src/statement'
 import { schema } from '../src/schema'
-import { all, pick } from '../src/wildcard'
+import { all, pick, raw } from '../src/wildcard'
 
 const users = schema({ table: 'users', columns: ['id', 'email'] })
 const usersAliased = schema({ table: 'users', columns: ['id', 'email'], alias: 'u' })
@@ -420,6 +420,20 @@ describe('insert', () => {
     expect(r.text).toBe('insert into "users" ("id" ,"email") values ($1 ,$2)')
     expect(r.values).toEqual([1, 'alias@example.com'])
   })
+
+  it('inlines a raw column value instead of binding it', () => {
+    const r = insert(users, { id: raw('nextval(\'users_id_seq\')'), email: 'a@b.com' })
+    expect(r.sql).toBe('insert into `users` (`id` ,`email`) values (nextval(\'users_id_seq\') ,?)')
+    expect(r.text).toBe('insert into "users" ("id" ,"email") values (nextval(\'users_id_seq\') ,$1)')
+    expect(r.values).toEqual(['a@b.com'])
+  })
+
+  it('inlines raw column values across multiple rows', () => {
+    const r = insert(users, { id: raw('default'), email: 'a@x.com' }, { id: raw('default'), email: 'b@x.com' })
+    expect(r.sql).toBe('insert into `users` (`id` ,`email`) values (default ,?) ,(default ,?)')
+    expect(r.text).toBe('insert into "users" ("id" ,"email") values (default ,$1) ,(default ,$2)')
+    expect(r.values).toEqual(['a@x.com', 'b@x.com'])
+  })
 })
 
 describe('update', () => {
@@ -452,5 +466,19 @@ describe('update', () => {
     expect(r.sql).toBe('update `users` set `email` = ?')
     expect(r.text).toBe('update "users" set "email" = $1')
     expect(r.values).toEqual(['alias@example.com'])
+  })
+
+  it('inlines a raw column value instead of binding it', () => {
+    const r = update(users, { id: raw('id + 1'), email: 'new@example.com' })
+    expect(r.sql).toBe('update `users` set `id` = id + 1 ,`email` = ?')
+    expect(r.text).toBe('update "users" set "id" = id + 1 ,"email" = $1')
+    expect(r.values).toEqual(['new@example.com'])
+  })
+
+  it('inlines a raw column value as the only assignment', () => {
+    const r = update(users, { id: raw('id + 1') })
+    expect(r.sql).toBe('update `users` set `id` = id + 1')
+    expect(r.text).toBe('update "users" set "id" = id + 1')
+    expect(r.values).toEqual([])
   })
 })

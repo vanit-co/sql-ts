@@ -305,7 +305,7 @@ rows.map(row => ({
 Builds a parameterised `INSERT` statement. Accepts one or more row objects. Column names from the first row are used; table and column names are properly quoted identifiers (never bind params).
 
 ```ts
-import { schema, insert } from '@vanit-co/sql-ts'
+import { schema, insert, raw } from '@vanit-co/sql-ts'
 
 const users = schema({ table: 'users', columns: ['id', 'email'] })
 
@@ -321,6 +321,11 @@ const q2 = insert(users,
 )
 q2.text    // insert into "users" ("id" ,"email") values ($1 ,$2) ,($3 ,$4)
 q2.values  // [1, 'alice@example.com', 2, 'bob@example.com']
+
+// Raw SQL expressions instead of bind params
+const q3 = insert(users, { id: raw("nextval('users_id_seq')"), email: 'alice@example.com' })
+q3.text    // insert into "users" ("id" ,"email") values (nextval('users_id_seq') ,$1)
+q3.values  // ['alice@example.com']
 ```
 
 ### `update(table, colsVals)`
@@ -328,7 +333,7 @@ q2.values  // [1, 'alice@example.com', 2, 'bob@example.com']
 Builds a parameterised `UPDATE ... SET ...` statement (without a `WHERE` clause - compose that separately using `concat`).
 
 ```ts
-import { schema, update } from '@vanit-co/sql-ts'
+import { schema, update, raw } from '@vanit-co/sql-ts'
 
 const users = schema({ table: 'users', columns: ['id', 'email'] })
 
@@ -340,6 +345,11 @@ q.values  // ['new@example.com']
 const q2 = update(users, { id: 99, email: 'updated@example.com' })
 q2.text    // update "users" set "id" = $1 ,"email" = $2
 q2.values  // [99, 'updated@example.com']
+
+// Raw SQL expressions instead of bind params
+const q3 = update(users, { id: raw('id + 1'), email: 'updated@example.com' })
+q3.text    // update "users" set "id" = id + 1 ,"email" = $1
+q3.values  // ['updated@example.com']
 ```
 
 ---
@@ -480,6 +490,8 @@ const q = sql`SELECT ${raw('COUNT(*)')} AS total FROM users`
 q.text    // SELECT COUNT(*) AS total FROM users
 q.values  // []
 ```
+
+`raw` works anywhere a value is accepted, including the column values passed to `insert` and `update`.
 
 ---
 

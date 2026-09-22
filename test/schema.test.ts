@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { schema, as } from '../src/schema'
+import { schema, as, alias } from '../src/schema'
 import { SYM_COLUMN, SYM_TABLE } from '../src/symbol'
 
 describe('schema', () => {
@@ -84,5 +84,37 @@ describe('as', () => {
     expect(as(s.id)).toBe('products_id')
     expect(as(s.name)).toBe('products_name')
     expect(as(s.price)).toBe('products_price')
+  })
+})
+
+describe('alias', () => {
+  const users = schema({ table: 'users', columns: ['id', 'email'], alias: 'u' })
+
+  it('keeps table name and sets the new alias', () => {
+    const a = alias(users, 'author')
+    expect(a[SYM_TABLE].name).toBe('users')
+    expect(a[SYM_TABLE].alias).toBe('author')
+  })
+
+  it('prefixes columns with the new alias', () => {
+    const a = alias(users, 'author')
+    expect(a.id[SYM_COLUMN]).toEqual({ name: 'id', prefix: 'author' })
+    expect(a.email[SYM_COLUMN]).toEqual({ name: 'email', prefix: 'author' })
+  })
+
+  it('does not change the original schema', () => {
+    alias(users, 'author')
+    expect(users[SYM_TABLE].alias).toBe('u')
+    expect(users.id[SYM_COLUMN].prefix).toBe('u')
+  })
+
+  it('works with as', () => {
+    expect(as(alias(users, 'a').id)).toBe('a_id')
+  })
+
+  it('keeps column types', () => {
+    const a = alias(users, 'a')
+    // @ts-expect-error unknown column
+    a.nope
   })
 })

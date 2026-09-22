@@ -105,6 +105,29 @@ const u = schema({ table: 'users', columns: ['id', 'email'], alias: 'u' })
 
 After calling `schema`, the returned object has a typed property for each column (`users.id`, `users.email`, etc.).
 
+#### Multiple aliases for the same table: `alias`
+
+`alias(table, newAlias)` returns a copy of a schema under a different alias, keeping the same table and typed columns. The original schema is left untouched, so it is handy in local scope for self-joins or joining the same table more than once.
+
+```ts
+import { schema, alias, selectAs, join, pick } from '@vanit-co/sql-ts'
+
+const users = schema({ table: 'users', columns: ['id', 'email'] })
+const posts = schema({ table: 'posts', columns: ['author_id', 'reviewer_id'], alias: 'p' })
+
+const author   = alias(users, 'author')
+const reviewer = alias(users, 'reviewer')
+
+const q = selectAs`SELECT ${pick(author.email, reviewer.email)} FROM ${posts}`
+  .append(join` JOIN ${author} ON ${posts.author_id} = ${author.id}`)
+  .append(join` JOIN ${reviewer} ON ${posts.reviewer_id} = ${reviewer.id}`)
+
+q.text
+// SELECT "author"."email" as "author_email" ,"reviewer"."email" as "reviewer_email" FROM "posts" "p"
+//   JOIN "users" "author" ON "p"."author_id" = "author"."id"
+//   JOIN "users" "reviewer" ON "p"."reviewer_id" = "reviewer"."id"
+```
+
 ---
 
 ### Result object

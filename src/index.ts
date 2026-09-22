@@ -1,5 +1,5 @@
 export { toMysql ,toPostgres } from './dialect'
 export { concat ,preparedStatementName } from './result'
-export { schema ,as } from './schema'
+export { schema ,as ,alias } from './schema'
 export * from './statement'
 export * from './wildcard'

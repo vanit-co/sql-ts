@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { empty ,sql, select, s, selectAs, sa, groupBy, g, having, h, join, j, orderBy, o, where, w, insert, update } from '../src/statement'
-import { schema } from '../src/schema'
+import { schema, alias } from '../src/schema'
 import { all, pick, raw } from '../src/wildcard'
 
 const users = schema({ table: 'users', columns: ['id', 'email'] })
@@ -522,5 +522,21 @@ describe('update', () => {
     expect(r.sql).toBe('update `users` set `id` = ? ,`email` = `id`')
     expect(r.text).toBe('update "users" set "id" = $1 ,"email" = "id"')
     expect(r.values).toEqual([99])
+  })
+})
+
+describe('self join with alias', () => {
+  it('renders the same table under two aliases', () => {
+    const posts = schema({ table: 'posts', columns: ['author_id', 'reviewer_id'], alias: 'p' })
+    const author = alias(users, 'author')
+    const reviewer = alias(users, 'reviewer')
+    const r = selectAs`SELECT ${pick(author.email, reviewer.email)} FROM ${posts}`
+      .append(join` JOIN ${author} ON ${posts.author_id} = ${author.id}`)
+      .append(join` JOIN ${reviewer} ON ${posts.reviewer_id} = ${reviewer.id}`)
+    expect(r.text).toBe(
+      'SELECT "author"."email" as "author_email" ,"reviewer"."email" as "reviewer_email" FROM "posts" "p"'
+      + ' JOIN "users" "author" ON "p"."author_id" = "author"."id"'
+      + ' JOIN "users" "reviewer" ON "p"."reviewer_id" = "reviewer"."id"'
+    )
   })
 })

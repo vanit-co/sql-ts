@@ -2,7 +2,7 @@
 
 A TypeScript SQL query builder using tagged template literals. Write plain SQL with safe, automatic parameter binding and properly quoted identifiers. No DSL to learn, no magic, no ORM.
 
-Supports **MySQL** (`?` placeholders, `` ` `` backtick identifiers) and **PostgreSQL** (`$n` placeholders, `"` double-quote identifiers) out of the box.
+Supports **MySQL** (`?` placeholders, `` ` `` backtick identifiers), **PostgreSQL** (`$n` placeholders, `"` double-quote identifiers) and **SQLite** (through the MySQL format, see [Result object](#result-object)) out of the box.
 
 ## Why this library?
 
@@ -136,7 +136,7 @@ Every template tag and statement builder returns a `Result` object with three pr
 
 | property | description |
 |----------|-------------|
-| `.sql` | Query string in MySQL format (`?` placeholders, backtick-quoted identifiers) |
+| `.sql` | Query string in MySQL format (`?` placeholders, backtick-quoted identifiers), also used for SQLite |
 | `.text` | Query string in PostgreSQL format (`$n` placeholders, double-quote identifiers) |
 | `.values` | Array of bind values in order, ready to pass to your database driver |
 
@@ -148,7 +148,12 @@ await client.query(query)
 
 // mysql2
 await connection.query(query)
+
+// better-sqlite3 / node:sqlite
+db.prepare(query.sql).all(...query.values)
 ```
+
+SQLite accepts backtick-quoted identifiers and `?` placeholders, so use `.sql` with it. Do not use `.text`: SQLite reads `$1` as a named parameter, so positional values won't bind.
 
 ---
 
@@ -351,7 +356,7 @@ q3.text    // insert into "users" ("id" ,"email") values (nextval('users_id_seq'
 q3.values  // ['alice@example.com']
 ```
 
-Column objects used as values are resolved to quoted identifiers rather than bound. They render unprefixed, since the statement has no alias in scope.
+Column objects used as values are resolved to quoted identifiers rather than bound. They render unprefixed, since the statement has no alias in scope. Referencing a column inside `values (...)` is only accepted by MySQL; PostgreSQL and SQLite reject it.
 
 ### `update(table, colsVals)`
 
